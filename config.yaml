@@ -1,15 +1,1 @@
-# 홈페이지에서 API서비스 신청시 받은 Appkey, Appsecret 값 설정 
-APP_KEY: "PSPzByWXyzB1qv3SeGHzKqOmVIygyOJeBvio"
-APP_SECRET: "KjyQjDITE76FaFl50WuqYUaCdOZRRNepkwGse+7VRuyBH9nuyJdWDWMEUlLT4gde/hHHnqWRaqNOx3WYt4xr0fL9XKWF1dNKVp3qgB3ZqmvsTovzWReHYG/8jLhkd9/mCnVkBOsOoK3DqMLwNBOyhf/UKL/xlGfaRNsXPvdZN/FHOWi1xKI="
-#dart_api key
-API_KEY: '52d4d0903916b36cbca0fdcc009b9d823ede98f8'
-# 계좌번호 앞 8자리
-CANO: "64895333"
-# 계좌번호 뒤 2자리
-ACNT_PRDT_CD: "01"
 
-# 도메인
-URL_BASE: "https://openapi.koreainvestment.com:9443"
-
-# HTS ID
-HTS_ID: "aicap1"
