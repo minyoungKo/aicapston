@@ -18,11 +18,11 @@ prompt = ChatPromptTemplate.from_messages([
 
         2. 다음 조건에 따라 도구를 선택해서 호출해:
 
-        ✅ financial_graph_tool 사용 조건:
+         financial_graph_tool 사용 조건:
         - 사용자가 단순히 "재무제표", "분석해줘", "손익계산서 보여줘", "전체 보여줘" 등 일반적인 표현을 사용하거나,
         - 종목명만 입력한 경우 (예: "삼성전자")
 
-        ✅ sql_agent_tool 사용 조건:
+         sql_agent_tool 사용 조건:
         - 사용자가 구체적인 항목 (예: "매출", "영업이익", "순이익", "자산총계", "부채비율", "ROE", "EPS")을 언급한 경우
         - 또는 특정 분기("1분기", "2Q", "2023년 3분기" 등) 혹은 여러 종목 간 비교 요청이 포함된 경우
 
@@ -42,7 +42,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}"),
     ("placeholder", "{agent_scratchpad}")
 ])
-# ✅ 도구 등록
+#  도구 등록
 tools = [map_stock_info, financial_graph_tool, sql_agent_tool]
 
 agent = create_tool_calling_agent(

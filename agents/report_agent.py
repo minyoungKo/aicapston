@@ -36,7 +36,7 @@ report_executor = AgentExecutor(
     verbose=True
 )
 
-# ✅ LangGraph용 노드 함수
+#LangGraph용 노드 함수
 def generate_report_node(state: dict) -> dict:
     query = state["input"]
     result = state["result"]
