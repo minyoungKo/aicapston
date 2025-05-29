@@ -27,6 +27,7 @@ def map_stock_info(query: str) -> dict:
 
     """
     try:
+
         prompt_judge = (
             f"'{query}'는 주식 종목명입니다. 국내(한국 상장)면 '국내', "
             f"해외(미국 상장 포함)면 '해외'라고만 대답해줘."

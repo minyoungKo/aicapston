@@ -8,7 +8,7 @@ from langchain.tools import Tool
 from news_tools.classify_query import classify_query
 from news_tools.news_summarize import summarize_news_links  # 🔄 뉴스 본문 요약 도구 (RAG 기반)
 
-llm = ChatOpenAI(model="gpt-4o")
+llm = ChatOpenAI(model="gpt-3.5-turbo")
 
 prompt = ChatPromptTemplate.from_messages([
     (
@@ -42,12 +42,12 @@ news_search_tools = [
     Tool.from_function(
         name="summarize_news_links",
         func=summarize_news_links,
-        description="종목명 또는 산업군 이름을 입력받아 관련 뉴스 원문을 수집하고 분석하여 종합 요약 결과를 생성합니다. (RAG 기반)"
+        description="종목명 또는 산업군 이름을 입력받아 관련 뉴스 원문을 수집하고 분석합니다. (RAG 기반)"
     )
 ]
 
 agent = create_tool_calling_agent(
-    llm=llm,
+    llm,
     tools=news_search_tools,
     prompt=prompt
 )

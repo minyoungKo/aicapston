@@ -1,5 +1,3 @@
-#main
-
 from dotenv import load_dotenv
 load_dotenv()
 from typing import TypedDict, Optional, List, Dict
@@ -15,24 +13,23 @@ from tools.wrapped_agents import (
 
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
-#상태 스키마 정의
+# 상태 스키마 정의
 class SupervisorState(TypedDict):
     input: str
     routes: List[str]
     results: Dict[str, str]
     report: Optional[str]
 
-#다중 Router Node
+# 라우터 노드
 async def multi_router_node(state: SupervisorState) -> SupervisorState:
     user_input = state["input"]
     prompt = (
         "다음 사용자 입력에 대해 어떤 도구들을 함께 사용할지 판단하세요.\n"
-        
         "반드시 아래 도구 이름들 중 필요한 것만 골라서 Python 리스트 형식으로 반환하세요.\n"
         "- stock_info_collector: 주가, 시세, 거래량 등\n"
         "- news_analyzer: 종목 관련 뉴스 수집 및 분석\n"
         "- chart_analyzer: 차트 기반 기술적 분석\n"
-        "- fundamental_analyzer: 재무제표 기반 분석\n\n"
+        "- fundamental_analyzer: 재무제표 기반 분석(매출액,당기순이익,재무상태표,현금흐름표,손익계산서)\n\n"
         f"입력: {user_input}\n"
         "출력 예시: ['stock_info_collector', 'chart_analyzer']"
     )
@@ -43,7 +40,7 @@ async def multi_router_node(state: SupervisorState) -> SupervisorState:
         routes = []
     return {"routes": routes, "input": user_input, "results": {}, "report": None}
 
-#병렬 실행 함수 수정 예시
+# 병렬 실행 함수
 async def run_parallel_tools(user_input: str, routes: list[str]) -> dict:
     route_to_func = {
         "stock_info_collector": invoke_stock_info_collector,
@@ -56,7 +53,7 @@ async def run_parallel_tools(user_input: str, routes: list[str]) -> dict:
     for route in routes:
         func = route_to_func.get(route)
         if func:
-            coroutine = func(user_input)  #async def 함수 호출 → 코루틴 객체
+            coroutine = func(user_input)
             coroutines.append((route, coroutine))
 
     results_raw = await asyncio.gather(
@@ -71,45 +68,31 @@ async def run_parallel_tools(user_input: str, routes: list[str]) -> dict:
             results[route] = result
 
     return results
-#병렬 실행 노드
+
+# 병렬 실행 노드
 async def parallel_node(state: SupervisorState) -> SupervisorState:
     results = await run_parallel_tools(state["input"], state["routes"])
     return {
         "input": state["input"],
         "routes": state["routes"],
         "results": results,
-        "report": None
+        "report": None  # 이제 report는 사용하지 않음
     }
 
-#보고서 생성 노드
-async def generate_report(state: SupervisorState) -> SupervisorState:
-    summary_prompt = (
-        f"사용자 입력: {state['input']}\n"
-        f"아래는 분석 결과입니다:\n\n"
-    )
-    for tool, output in state["results"].items():
-        summary_prompt += f"[{tool}]\n{output}\n\n"
-    summary_prompt += "위 내용을 바탕으로 전체 종합 분석 보고서를 작성해줘."
-    response = await llm.ainvoke(summary_prompt)
-    state["report"] = response.content.strip()
-    return state
-
-#그래프 구성
+# 그래프 구성
 builder = StateGraph(SupervisorState)
 
 builder.add_node("router", multi_router_node)
 builder.add_node("parallel_executor", parallel_node)
-builder.add_node("generate_report", generate_report)
 
 builder.set_entry_point("router")
 builder.add_edge("router", "parallel_executor")
-builder.add_edge("parallel_executor", "generate_report")
-builder.set_finish_point("generate_report")
+builder.set_finish_point("parallel_executor")
 
-#컴파일
+# 컴파일
 defined_supervisor_graph = builder.compile()
 
-#실행 예시 (비동기)
+# 실행 예시 (비동기)
 if __name__ == "__main__":
     async def main():
         while True:
@@ -117,7 +100,8 @@ if __name__ == "__main__":
             if query.lower() in ["exit", "quit"]:
                 break
             result = await defined_supervisor_graph.ainvoke({"input": query})
-            print("\n[종합 분석 보고서]")
-            print(result.get("report"))
+            print("\n[개별 분석 결과]")
+            for key, value in result["results"].items():
+                print(f"\n🔹 {key}\n{value}")
 
     asyncio.run(main())

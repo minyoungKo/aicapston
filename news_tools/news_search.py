@@ -44,7 +44,7 @@ def search_news(query: str) -> str:
         originallink = item.get("originallink")
 
         # 제목에 query가 포함되어 있는지 확인 (대소문자 무시)
-        if lower_query not in title.lower():
+        if lower_query not in title.lower() and lower_query not in desc.lower():
             continue
 
         if not originallink or originallink in seen_links:
@@ -57,7 +57,7 @@ def search_news(query: str) -> str:
             "link": originallink
         })
 
-        if len(results) >= 30:
+        if len(results) >= 20:
             break
 
     return json.dumps(results, ensure_ascii=False)

@@ -2,7 +2,7 @@ import yaml
 import os
 from dotenv import load_dotenv
 
-with open('config.yaml', encoding='UTF-8') as f:
+with open('C:/Users/school/PycharmProjects/capston/config.yaml', encoding='UTF-8') as f:
     _cfg = yaml.load(f, Loader=yaml.FullLoader)
 APP_KEY = _cfg['APP_KEY']
 APP_SECRET = _cfg['APP_SECRET']

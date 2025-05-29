@@ -19,17 +19,17 @@ class FinancialState(TypedDict):
 
 analyze_pl_node = RunnableLambda(lambda state: {
     **state,
-    "pl": analyze_profit_loss_from_db(state["corp_name"])
+    "pl": analyze_profit_loss_from_db.invoke(state["corp_name"])
 })
 
 analyze_bs_node = RunnableLambda(lambda state: {
     **state,
-    "bs": analyze_balance_sheet_from_db(state["corp_name"])
+    "bs": analyze_balance_sheet_from_db.invoke(state["corp_name"])
 })
 
 analyze_cf_node = RunnableLambda(lambda state: {
     **state,
-    "cf": analyze_cash_flow_from_db(state["corp_name"])
+    "cf": analyze_cash_flow_from_db.invoke(state["corp_name"])
 })
 
 summarize_node = RunnableLambda(lambda state: {

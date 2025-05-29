@@ -1,7 +1,7 @@
 import sqlite3
 import pandas as pd
 from langchain.tools import tool
-
+from utils.format import format_amount_auto
 
 # ✅ 1. SQLite 기반 현금흐름 분석 Agent
 class CashFlowSQLAgent:
@@ -11,10 +11,11 @@ class CashFlowSQLAgent:
     def query_cf_data(self, ticker: str) -> pd.DataFrame:
         query = f"""
         SELECT * FROM cf_statement
-        WHERE corp_code = '{ticker}'
-        ORDER BY bsns_year, quarter;
+        WHERE corp_code = ?
+        AND quarter = ?
+        ORDER BY bsns_year;
         """
-        return pd.read_sql(query, self.conn)
+        return pd.read_sql(query, self.conn, params=(ticker, "4Q"))
 
     def analyze(self, ticker: str) -> str:
         df = self.query_cf_data(ticker)
@@ -50,7 +51,7 @@ class CashFlowSQLAgent:
                 if pd.isna(value):
                     continue
 
-                formatted = f"{value / 1e12:.2f}조 원"
+                formatted = format_amount_auto(value)
 
                 if "영업활동" in activity:
                     평가 = "영업 현금창출 양호" if value > 0 else "영업 흐름 주의"
@@ -70,11 +71,8 @@ class CashFlowSQLAgent:
 
         return "\n\n".join(reports)
 
-        return "\n\n".join(report)
-
-
 # ✅ 2. 에이전트 인스턴스 생성 (DB 경로 수정 필요)
-agent = CashFlowSQLAgent("C:/Users/school/PycharmProjects/capston/fss_origin.db")
+agent = CashFlowSQLAgent("C:/Users/school/PycharmProjects/capston/fss_new.db")
 
 
 # ✅ 3. LangChain Tool 등록

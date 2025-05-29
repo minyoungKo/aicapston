@@ -1,19 +1,20 @@
 import sqlite3
 import pandas as pd
 from langchain.tools import tool
-
+from utils.format import format_amount_auto
 
 class ProfitLossSQLAgent:
     def __init__(self, db_path: str):
         self.conn = sqlite3.connect(db_path,check_same_thread=False)
 
     def query_pl_data(self, ticker: str) -> pd.DataFrame:
-        query = f"""
+        query = """
         SELECT * FROM pl_statement
-        WHERE corp_code = '{ticker}'
-        ORDER BY bsns_year, quarter;
+        WHERE corp_code = ?
+        AND quarter = ?
+        ORDER BY bsns_year;
         """
-        return pd.read_sql(query, self.conn)
+        return pd.read_sql(query, self.conn, params=(ticker, "4Q"))
 
     def get_real_quarter_value(self, df: pd.DataFrame, item_code: str, year: int, quarter: str) -> float | None:
         if quarter in ["1Q", "2Q", "3Q"]:
@@ -72,17 +73,17 @@ class ProfitLossSQLAgent:
             tax = self.get_real_quarter_value(df, ITEMS["법인세"], year, quarter)
 
             if revenue is not None:
-                summary.append(f"매출액: {revenue / 1e12:.2f}조 원")
+                summary.append(f"매출액: {format_amount_auto(revenue)}")
             if gross is not None and revenue:
-                summary.append(f"매출총이익: {gross / 1e12:.2f}조 원 → 총이익률 {gross / revenue * 100:.1f}%")
+                summary.append(f"매출총이익: {format_amount_auto(gross)} → 총이익률 {gross / revenue * 100:.1f}%")
             if op_profit is not None and revenue:
-                summary.append(f"영업이익: {op_profit / 1e12:.2f}조 원 → 영업이익률 {op_profit / revenue * 100:.1f}%")
+                summary.append(f"영업이익: {format_amount_auto(op_profit)} → 영업이익률 {op_profit / revenue * 100:.1f}%")
             if net_profit is not None and revenue:
-                summary.append(f"당기순이익: {net_profit / 1e12:.2f}조 원 → 순이익률 {net_profit / revenue * 100:.1f}%")
+                summary.append(f"당기순이익: {format_amount_auto(net_profit)} → 순이익률 {net_profit / revenue * 100:.1f}%")
             if interest is not None:
-                summary.append(f"이자비용: {interest / 1e12:.2f}조 원")
+                summary.append(f"이자비용: {format_amount_auto(interest)}")
             if tax is not None:
-                summary.append(f"법인세비용: {tax / 1e12:.2f}조 원")
+                summary.append(f"법인세비용: {format_amount_auto(tax)}")
 
             if summary:
                 reports.append(f"{year}년 {quarter} 손익 분석\n" + "\n".join(f"- {s}" for s in summary))
@@ -97,12 +98,14 @@ class ProfitLossSQLAgent:
         if annuals:
             reports.append(" 연간 실적 요약")
             for year, (rev, profit) in annuals.items():
-                reports.append(f"- {year}년 총 매출: {rev/1e12:.2f}조 원, 순이익: {profit/1e12:.2f}조 원")
+                rev_fmt = format_amount_auto(rev)
+                profit_fmt = format_amount_auto(profit)
+                reports.append(f"- {year}년 총 매출: {rev_fmt}, 순이익: {profit_fmt}")
 
         return "\n\n".join(reports)
 
 
-pl_agent = ProfitLossSQLAgent("C:/Users/school/PycharmProjects/capston/fss_origin.db")
+pl_agent = ProfitLossSQLAgent("C:/Users/school/PycharmProjects/capston/fss_new.db")
 
 @tool
 def analyze_profit_loss_from_db(ticker: str) -> str:

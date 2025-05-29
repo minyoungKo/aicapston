@@ -1,7 +1,7 @@
 import sqlite3
 import pandas as pd
 from langchain.tools import tool
-
+from utils.format import format_amount_auto
 
 class BalanceSheetSQLAgent:
     def __init__(self, db_path: str):
@@ -10,10 +10,11 @@ class BalanceSheetSQLAgent:
     def query_bs_data(self, ticker: str) -> pd.DataFrame:
         query = f"""
         SELECT * FROM bs_statement
-        WHERE corp_code = '{ticker}'
-        ORDER BY bsns_year, quarter;
+        WHERE corp_code = ?
+        AND quarter = ?
+        ORDER BY bsns_year;
         """
-        return pd.read_sql(query, self.conn)
+        return pd.read_sql(query, self.conn, params=(ticker, "4Q"))
 
     def analyze(self, ticker: str) -> str:
         df = self.query_bs_data(ticker)
@@ -44,11 +45,10 @@ class BalanceSheetSQLAgent:
             retained = get_item("이익잉여금") or get_item("이익잉여금(결손금)")
 
             summary = []
-
             # 기본 항목
-            if total_assets: summary.append(f"자산총계: {total_assets / 1e12:.2f}조 원")
-            if total_liabilities: summary.append(f"부채총계: {total_liabilities / 1e12:.2f}조 원")
-            if equity: summary.append(f"자본총계: {equity / 1e12:.2f}조 원")
+            if total_assets: summary.append(f"자산총계: {format_amount_auto(total_assets)}")
+            if total_liabilities: summary.append(f"부채총계: {format_amount_auto(total_liabilities)}")
+            if equity: summary.append(f"자본총계: {format_amount_auto(equity)}")
 
             # 비율 분석
             if total_assets and total_liabilities:
@@ -60,9 +60,9 @@ class BalanceSheetSQLAgent:
                 summary.append(f"유동비율: {current_ratio:.1f}%")
 
             # 기타 항목
-            if cash: summary.append(f"현금및현금성자산: {cash / 1e12:.2f}조 원")
-            if inventory: summary.append(f"재고자산: {inventory / 1e12:.2f}조 원")
-            if retained: summary.append(f"이익잉여금: {retained / 1e12:.2f}조 원")
+            if cash: summary.append(f"현금및현금성자산: {format_amount_auto(cash)}")
+            if inventory: summary.append(f"재고자산: {format_amount_auto(inventory)}")
+            if retained: summary.append(f"이익잉여금: {format_amount_auto(retained)}")
 
             if summary:
                 reports.append(f"📘 {year}년 {quarter} 재무상태표 분석\n" + "\n".join(f"- {s}" for s in summary))
@@ -71,7 +71,7 @@ class BalanceSheetSQLAgent:
 
 
 # ✅ 에이전트 인스턴스 생성
-bs_agent = BalanceSheetSQLAgent("C:/Users/school/PycharmProjects/capston/fss_origin.db")
+bs_agent = BalanceSheetSQLAgent("C:/Users/school/PycharmProjects/capston/fss_new.db")
 
 
 # ✅ LangChain Tool 등록
